@@ -1,4 +1,5 @@
 #include<18F452.h>
+#include<math.h>
 #fuses HS,NOWDT,NOPROTECT,NOLVP
 #use delay(clock=20000000)
 #use rs232(baud=9600, xmit=PIN_C6, rcv=PIN_C7, stream=com_A)  // Jumpers: 8 to 11, 7 to 12
@@ -33,7 +34,7 @@ signed int16 temp3, temp3b;
 int temp1, temp1b, temp2, temp2b;
 int8 busy=0;
 int16 therm2, i, therm;
-int32 sum, measuredph, a;
+int32 sum; // measuredph - defined as long above
 float total_sq, measuredrms, extrms;
 
 void groupselect(void);
@@ -1334,7 +1335,7 @@ output_B(0b00000000);
    delay_us(9);
    avpulseheight(); //get pulse height reading
    total=total+measuredph;
-   total_sq+=measuredph*measuredph
+   total_sq+=measuredph*measuredph;
    N=N+1; //inc divisor for average
 
    do
@@ -1384,7 +1385,7 @@ output_B(0b00000000);
    delay_us(9);
    upperaveph(); //get pulse height reading
    total=total+measuredph;
-   total_sq=measuredph*measuredph
+   total_sq=measuredph*measuredph;
    N=N+1; //inc divisor for average
 
    do
