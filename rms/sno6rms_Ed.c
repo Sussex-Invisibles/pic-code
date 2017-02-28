@@ -1,16 +1,16 @@
 #include<18F452.h>
-#include<math.h>
 #fuses HS,NOWDT,NOPROTECT,NOLVP
 #use delay(clock=20000000)
 #use rs232(baud=9600, xmit=PIN_C6, rcv=PIN_C7, stream=com_A)  // Jumpers: 8 to 11, 7 to 12
 #use rs232(baud=9600, xmit=PIN_C5, invert, stream=com_B)
 #include <stdlib.h>
+#include <math.h>
 #define NOP #asm NOP #endasm
 #define ONE_WIRE_PIN PIN_A0
 #define ONE_WIRE_PIN2 PIN_A1
 
 set_tris_e(0x00); //all outputs
-set_tris_A(0x02);
+set_tris_A(0x02); //tristate data2 input
 
 static int wl;
 int1 trigbit, fdelay, datbit, datbit2;
@@ -34,7 +34,7 @@ signed int16 temp3, temp3b;
 int temp1, temp1b, temp2, temp2b;
 int8 busy=0;
 int16 therm2, i, therm;
-int32 sum; // measuredph - defined as long above
+int32 sum, a;
 float total_sq, measuredrms, extrms;
 
 void groupselect(void);
@@ -91,6 +91,7 @@ void extaverage2(void);
 output_high(PIN_D6);   //set clock line high
 output_low(PIN_C0);   //Disable external trigger
 output_low(PIN_D2);   //Disable internal pulsing
+
 
 void main(void)
 {
@@ -975,7 +976,8 @@ for(i=1;i<=16;i++)
  measuredph= measuredph << 1; // move pulse height data left
  measuredph=measuredph + datbit;
 }
-
+ output_low(PIN_D6); //Extra clock pulse to return DATA OUT line to zero ***
+ output_high(PIN_D6);   //***
 fprintf(com_A,"%lu",measuredph);
 }
 
@@ -994,6 +996,8 @@ for(i=1;i<=16;i++)
  measuredph= measuredph << 1; // move pulse height data left
  measuredph=measuredph + datbit;
 }
+ output_low(PIN_D6); //Extra clock pulse to return DATA OUT line to zero ***
+ output_high(PIN_D6);   //***
 }
 
 //***********************************************
@@ -1009,7 +1013,8 @@ for(i=1;i<=16;i++)
  measuredph= measuredph << 1; // move pulse height data left
  measuredph=measuredph + datbit;
 }
-
+ output_low(PIN_D6); //Extra clock pulse to return DATA OUT line to zero ***
+ output_high(PIN_D6);   //***
 fprintf(com_A,"%lu",measuredph);
 }
 
@@ -1027,6 +1032,8 @@ for(i=1;i<=16;i++)
  measuredph= measuredph << 1; // move pulse height data left
  measuredph=measuredph + datbit;
 }
+ output_low(PIN_D6); //Extra clock pulse to return DATA OUT line to zero ***
+ output_high(PIN_D6);   //***
 }
 
 //**********************************************
@@ -1130,6 +1137,7 @@ void extrigenable(void)
 {
 output_low(PIN_D2);   //Disable internal pulsing
 output_high(PIN_C0); //
+output_low(PIN_D0);   //Enable external trigger to use OR gate
 fprintf(com_A,"A");
 }
 
@@ -1150,6 +1158,7 @@ count=0;
 num=numhi*numlo;
 output_low(PIN_A4);
 fprintf(com_A,"F");
+output_low(PIN_D0);  //Enable external trigger to use OR gate
 output_high(PIN_C0); //Enable external trigger
 
 do
@@ -1320,6 +1329,7 @@ total=0; //summed pulse heights
 total_sq=0; //sum of the squares
 output_low(PIN_A4); // Green LED ON
 //fprintf(com_A,"F");
+output_low(PIN_D0);  //Enable external trigger to use OR gate
 output_high(PIN_C0); //Enable external trigger
 do
 {
@@ -1370,6 +1380,7 @@ total=0; //summed pulse heights
 total_sq=0;
 output_low(PIN_A4); // Green LED ON
 //fprintf(com_A,"F");
+output_low(PIN_D0);  //Enable external trigger to use OR gate
 output_high(PIN_C0); //Enable external trigger
 do
 {
@@ -1519,7 +1530,7 @@ void ds18b20_read(therm)
 {
 /******LOOKUP TABLE- DS18B20 unique codes*******/
  //remember to change romcode[n] = number of sensors x 8
- 
+
 // char romcode[256]={0x28,0x52,0x34,0x62,0x04,0x00,0x00,0xCC,//B1.1 Lab test
 //char romcode[256]={0x28,0x9E,0xCC,0x62,0x04,0x00,0x00,0xB6,//B1.1 Eds test
 //char romcode[256]={0x28,0xBE,0xC9,0x8F,0x03,0x00,0x00,0x7C,//B1.1 True no 1
